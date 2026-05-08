@@ -1,0 +1,56 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_FIREBASE_API_KEY: AIzaSyDuZyTh49vc0oOzQX8iJJyVYVohYnUxQys
+          VITE_FIREBASE_AUTH_DOMAIN: get-organised-196dc.firebaseapp.com
+          VITE_FIREBASE_PROJECT_ID: get-organised-196dc
+          VITE_FIREBASE_STORAGE_BUCKET: get-organised-196dc.firebasestorage.app
+          VITE_FIREBASE_MESSAGING_SENDER_ID: "623293041573"
+          VITE_FIREBASE_APP_ID: 1:623293041573:web:82483380ce2cde6bdc364c
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
